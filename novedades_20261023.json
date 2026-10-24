@@ -1,0 +1,20 @@
+{
+    "lote": "NOV-2026-11",
+    "fecha_generacion": "2026-10-28",
+    "responsable": "Gestion Humana",
+    "novedades": [
+    {
+        "consecutivo": 1,
+        "tipo": "ALTA",
+        "nombres": "Maria",
+        "apellidos": "Perez",
+        "tipo_documento": "CC",
+        "numero_documento": "1023456789",
+        "fecha_efectiva": "2026-11-01",
+        "cargo": "ANL-01",
+        "centro_costo": "CC-1040",
+        "telefono": "(310) 555-8899",
+        "observaciones": ""
+    }
+]
+}
