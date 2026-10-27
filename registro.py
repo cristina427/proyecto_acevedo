@@ -39,18 +39,23 @@ def guardar_log():
     hoja.title = "Detalle"
 
     hoja.append([
-        "Fecha_Hora",
-        "Nivel",
-        "Modulo",
-        "Funcion",
-        "Registro",
-        "Mensaje",
-        "Detalle"
-    ])
+    "Consecutivo",
+    "Fecha_Hora",
+    "Nivel",
+    "Modulo",
+    "Funcion",
+    "Registro",
+    "Mensaje",
+    "Detalle"
+])
 
-    for evento in eventos:
+    for consecutivo, evento in enumerate(
+    eventos,
+    start=1
+):
 
         hoja.append([
+            consecutivo,
             evento["fecha_hora"].strftime(
                 "%Y-%m-%d %H:%M:%S"
             ),

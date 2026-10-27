@@ -21,7 +21,11 @@ PATRONES = {
 
     "documento_pa": re.compile(
         r"^(?=.*[A-Za-z])[A-Za-z0-9]{6,12}$"
-    )
+    ),
+
+    "fechas_observaciones": re.compile(
+    r"\b(?:\d{2}/\d{2}/\d{4}|\d{4}-\d{2}-\d{2})\b"
+)
 }
 
 
@@ -158,3 +162,59 @@ def validar_fecha(
         return False
 
     return True
+
+def extraer_fecha_mas_antigua(
+    observaciones
+):
+
+    if not observaciones:
+
+        return ""
+
+    textos_fechas = (
+        PATRONES[
+            "fechas_observaciones"
+        ].findall(
+            observaciones
+        )
+    )
+
+    fechas = []
+
+    formatos = [
+        "%d/%m/%Y",
+        "%Y-%m-%d"
+    ]
+
+    for texto_fecha in textos_fechas:
+
+        for formato in formatos:
+
+            try:
+
+                fecha = datetime.strptime(
+                    texto_fecha,
+                    formato
+                )
+
+                fechas.append(
+                    fecha
+                )
+
+                break
+
+            except ValueError:
+
+                pass
+
+    if not fechas:
+
+        return ""
+
+    fecha_mas_antigua = min(
+        fechas
+    )
+
+    return fecha_mas_antigua.strftime(
+        "%Y-%m-%d"
+    )

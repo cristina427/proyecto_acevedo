@@ -4,7 +4,8 @@ from modulos.validacion import (
     validar_documento,
     validar_telefono,
     limpiar_telefono,
-    validar_fecha
+    validar_fecha,
+    extraer_fecha_mas_antigua
 )
 
 
@@ -38,16 +39,19 @@ def procesar_novedades(
         errores = []
 
         # Campos obligatorios
+
         for campo in requeridos:
 
             valor = novedad.get(campo)
 
             if valor in [None, ""]:
+
                 errores.append(
                     f"Falta el campo {campo}"
                 )
 
         # Documento
+
         tipo_doc = novedad.get(
             "tipo_documento",
             ""
@@ -70,6 +74,7 @@ def procesar_novedades(
                 )
 
         # Telefono
+
         telefono = novedad.get(
             "telefono",
             ""
@@ -86,6 +91,7 @@ def procesar_novedades(
                 )
 
         # Fecha
+
         fecha_efectiva = novedad.get(
             "fecha_efectiva",
             ""
@@ -109,6 +115,7 @@ def procesar_novedades(
                 )
 
         # Centro de costo
+
         centro = novedad.get(
             "centro_costo"
         )
@@ -120,6 +127,7 @@ def procesar_novedades(
             )
 
         # Cargo
+
         cargo = novedad.get(
             "cargo"
         )
@@ -130,7 +138,10 @@ def procesar_novedades(
                 "Cargo invalido"
             )
 
-        # Validacion cruzada de areas
+        area_centro = None
+
+        # Validación cruzada
+
         if (
             cargo in cargos
             and centro in centros_costo
@@ -153,6 +164,7 @@ def procesar_novedades(
                 )
 
         # Rechazados
+
         if errores:
 
             rechazados.append(
@@ -164,124 +176,175 @@ def procesar_novedades(
 
             continue
 
-        # Perfil
-        area_centro = (
-            centros_costo[centro]["area"]
-        )
+        # Perfil sistema
+        
+        if (
+            cargo
+            and centro
+            and area_centro
+        ):
 
-        clave_rol = (
-            f"{cargo}|{area_centro}"
-        )
-
-        rol = matriz_roles.get(
-            clave_rol
-        )
-
-        if rol is None:
-
-            rechazados.append(
-                {
-                    "registro": novedad,
-                    "errores": [
-                        "Combinacion cargo-area inexistente"
-                    ]
-                }
+            clave_rol = (
+                f"{cargo}|{area_centro}"
             )
 
-            continue
-
-        novedad["perfil_sistema"] = (
-            rol["perfil"]
-        )
-
-        novedad["requiere_aprobacion"] = (
-            rol["requiere_aprobacion"]
-        )
-
-        # Correo corporativo
-        dominio = parametros[
-            "dominio_correo"
-        ]
-
-        primer_nombre = (
-            novedad["nombres"]
-            .strip()
-            .split()[0]
-        )
-
-        primer_apellido = (
-            novedad["apellidos"]
-            .strip()
-            .split()[0]
-        )
-
-        base = (
-            f"{primer_nombre}.{primer_apellido}"
-        ).lower()
-
-        base = "".join(
-            c
-            for c in unicodedata.normalize(
-                "NFD",
-                base
+            rol = matriz_roles.get(
+                clave_rol
             )
-            if unicodedata.category(c)
-            != "Mn"
-        )
 
-        base = base.replace(
-            "ñ",
-            "n"
-        )
+            if rol is None:
 
-        base = "".join(
-            c
-            for c in base
-            if c.isalpha() or c == "."
-        )
+                rechazados.append(
+                    {
+                        "registro": novedad,
+                        "errores": [
+                            "Combinacion cargo-area inexistente"
+                        ]
+                    }
+                )
 
-        cantidad = correos_asignados.get(
-            base,
-            0
-        )
+                continue
 
-        correos_asignados[base] = (
-            cantidad + 1
-        )
+            novedad["perfil_sistema"] = (
+                rol["perfil"]
+            )
 
-        if cantidad == 0:
-
-            correo = (
-                f"{base}@{dominio}"
+            novedad["requiere_aprobacion"] = (
+                rol["requiere_aprobacion"]
             )
 
         else:
 
-            correo = (
-                f"{base}{cantidad + 1}@{dominio}"
+            novedad["perfil_sistema"] = ""
+            novedad["requiere_aprobacion"] = ""
+
+        # Correo corporativo
+        correo = ""
+
+        if (
+            tipo == "ALTA"
+            and novedad.get("nombres")
+            and novedad.get("apellidos")
+        ):
+
+            dominio = parametros[
+                "dominio_correo"
+            ]
+
+            primer_nombre = (
+                novedad["nombres"]
+                .strip()
+                .split()[0]
             )
 
-            colisiones.append(
-                {
-                    "consecutivo": novedad.get(
-                        "consecutivo"
-                    ),
-                    "base": base,
-                    "correo_generado": correo
-                }
+            primer_apellido = (
+                novedad["apellidos"]
+                .strip()
+                .split()[0]
             )
 
-        novedad[
-            "correo_corporativo"
-        ] = correo
+            base = (
+                f"{primer_nombre}.{primer_apellido}"
+            ).lower()
 
-        # Telefono normalizado
+            base = "".join(
+                c
+                for c in unicodedata.normalize(
+                    "NFD",
+                    base
+                )
+                if unicodedata.category(c)
+                != "Mn"
+            )
+
+            base = base.replace(
+                "ñ",
+                "n"
+            )
+
+            base = "".join(
+                c
+                for c in base
+                if c.isalpha() or c == "."
+            )
+
+            cantidad = correos_asignados.get(
+                base,
+                0
+            )
+
+            correos_asignados[base] = (
+                cantidad + 1
+            )
+
+            if cantidad == 0:
+
+                correo = (
+                    f"{base}@{dominio}"
+                )
+
+            else:
+
+                correo = (
+                    f"{base}{cantidad + 1}@{dominio}"
+                )
+
+                colisiones.append(
+                    {
+                        "consecutivo": novedad.get(
+                            "consecutivo"
+                        ),
+                        "base": base,
+                        "correo_generado": correo
+                    }
+                )
+
+        novedad["correo_corporativo"] = (
+            correo
+        )
+
+        # Normalizaciones
         novedad["telefono"] = (
             limpiar_telefono(
                 novedad.get(
                     "telefono",
                     ""
                 )
+            )
+        )
+
+        novedad["nombre_completo"] = (
+            f"{novedad.get('nombres', '').strip()} "
+            f"{novedad.get('apellidos', '').strip()}"
+        ).strip()
+
+        if cargo in cargos:
+
+            novedad["nombre_cargo"] = (
+                cargos[cargo]["nombre"]
+            )
+
+            novedad["nivel"] = (
+                cargos[cargo]["nivel"]
+            )
+
+        else:
+
+            novedad["nombre_cargo"] = ""
+            novedad["nivel"] = ""
+
+        novedad["area"] = (
+            area_centro
+            if area_centro
+            else ""
+        )
+
+        novedad[
+            "fecha_vinculacion_previa"
+        ] = extraer_fecha_mas_antigua(
+            novedad.get(
+                "observaciones",
+                ""
             )
         )
 

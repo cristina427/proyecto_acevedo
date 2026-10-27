@@ -9,17 +9,28 @@ def generar_reporte(
 
     libro = Workbook()
 
-    # Hoja Carga_Sistema
+    # Hoja 1 - Carga_Sistema
+
     hoja_validos = libro.active
     hoja_validos.title = "Carga_Sistema"
 
     hoja_validos.append([
-        "Consecutivo",
-        "Tipo",
-        "Perfil",
-        "Correo",
-        "Telefono",
-        "Requiere_Aprobacion"
+        "consecutivo",
+        "tipo_novedad",
+        "tipo_documento",
+        "numero_documento",
+        "nombre_completo",
+        "correo_corporativo",
+        "codigo_cargo",
+        "nombre_cargo",
+        "nivel",
+        "centro_costo",
+        "area",
+        "perfil_sistema",
+        "requiere_aprobacion",
+        "fecha_efectiva",
+        "telefono",
+        "fecha_vinculacion_previa"
     ])
 
     for registro in validos:
@@ -27,34 +38,56 @@ def generar_reporte(
         hoja_validos.append([
             registro.get("consecutivo"),
             registro.get("tipo"),
-            registro.get("perfil_sistema"),
+            registro.get("tipo_documento"),
+            registro.get("numero_documento"),
+            registro.get("nombre_completo"),
             registro.get("correo_corporativo"),
+            registro.get("cargo"),
+            registro.get("nombre_cargo"),
+            registro.get("nivel"),
+            registro.get("centro_costo"),
+            registro.get("area"),
+            registro.get("perfil_sistema"),
+            registro.get("requiere_aprobacion"),
+            registro.get("fecha_efectiva"),
             registro.get("telefono"),
-            registro.get("requiere_aprobacion")
+            registro.get("fecha_vinculacion_previa")
         ])
 
-    # Hoja Rechazados
+    # Hoja 2 - Rechazados
+
     hoja_rechazados = libro.create_sheet(
         "Rechazados"
     )
 
     hoja_rechazados.append([
-        "Consecutivo",
-        "Errores"
+        "consecutivo",
+        "tipo",
+        "numero_documento",
+        "nombre",
+        "motivo"
     ])
 
     for registro in rechazados:
 
+        novedad = registro["registro"]
+
         hoja_rechazados.append([
-            registro["registro"].get(
-                "consecutivo"
-            ),
+            novedad.get("consecutivo"),
+            novedad.get("tipo"),
+            novedad.get("numero_documento"),
+            (
+                f"{novedad.get('nombres', '')} "
+                f"{novedad.get('apellidos', '')}"
+            ).strip(),
             "; ".join(
-                registro["errores"]
+                str(error)
+                for error in registro["errores"]
             )
         ])
 
-    # Hoja Colisiones_Correo
+    # Hoja 3 - Colisiones_Correo
+
     hoja_colisiones = libro.create_sheet(
         "Colisiones_Correo"
     )
@@ -73,7 +106,8 @@ def generar_reporte(
             colision["correo_generado"]
         ])
 
-    # Hoja Resumen
+    # Hoja 4 - Resumen
+
     hoja_resumen = libro.create_sheet(
         "Resumen"
     )
