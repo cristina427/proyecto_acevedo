@@ -9,7 +9,7 @@ def generar_reporte(
 
     libro = Workbook()
 
-    # Hoja válidos
+    # Hoja Carga_Sistema
     hoja_validos = libro.active
     hoja_validos.title = "Carga_Sistema"
 
@@ -33,25 +33,28 @@ def generar_reporte(
             registro.get("requiere_aprobacion")
         ])
 
-    # Hoja rechazados
+    # Hoja Rechazados
     hoja_rechazados = libro.create_sheet(
         "Rechazados"
     )
 
     hoja_rechazados.append([
+        "Consecutivo",
         "Errores"
     ])
 
     for registro in rechazados:
 
         hoja_rechazados.append([
+            registro["registro"].get(
+                "consecutivo"
+            ),
             "; ".join(
                 registro["errores"]
             )
         ])
 
-    # Hoja colisiones
-    
+    # Hoja Colisiones_Correo
     hoja_colisiones = libro.create_sheet(
         "Colisiones_Correo"
     )
@@ -70,7 +73,7 @@ def generar_reporte(
             colision["correo_generado"]
         ])
 
-    # Hoja resumen
+    # Hoja Resumen
     hoja_resumen = libro.create_sheet(
         "Resumen"
     )

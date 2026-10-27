@@ -3,8 +3,13 @@ from modulos.excepciones import ErrorConfiguracion
 
 
 def cargar_configuracion():
+
     try:
-        libro = load_workbook("config/parametros.xlsx")
+
+        libro = load_workbook(
+            "config/parametros.xlsx"
+        )
+
         hojas_requeridas = [
             "Parametros",
             "Cargos",
@@ -14,52 +19,117 @@ def cargar_configuracion():
         ]
 
         for hoja in hojas_requeridas:
+
             if hoja not in libro.sheetnames:
+
                 raise ErrorConfiguracion(
                     f"Falta la hoja: {hoja}"
                 )
+
+        # Parametros
         hoja_parametros = libro["Parametros"]
 
         parametros = {}
 
-        for clave, valor in hoja_parametros.iter_rows(min_row=2, values_only=True):
-         parametros[clave] = valor
+        for clave, valor in hoja_parametros.iter_rows(
+            min_row=2,
+            values_only=True
+        ):
 
-        hoja_campos = libro["Campos_Obligatorios"]
+            parametros[clave] = valor
+
+        # Campos obligatorios
+        hoja_campos = libro[
+            "Campos_Obligatorios"
+        ]
 
         campos_obligatorios = {}
 
-        for tipo, campos in hoja_campos.iter_rows(min_row=2, values_only=True):
-         campos_obligatorios[tipo] = campos.split(";")
+        for tipo, campos in hoja_campos.iter_rows(
+            min_row=2,
+            values_only=True
+        ):
 
-        hoja_centros = libro["Centros_Costo"]
+            campos_obligatorios[tipo] = (
+                campos.split(";")
+            )
+
+        # Centros de costo
+        hoja_centros = libro[
+            "Centros_Costo"
+        ]
 
         centros_costo = {}
 
-        for codigo, nombre, area in hoja_centros.iter_rows(min_row=2, values_only=True):
-         centros_costo[codigo] = {"nombre": nombre, "area": area}
+        for codigo, nombre, area in hoja_centros.iter_rows(
+            min_row=2,
+            values_only=True
+        ):
 
-         hoja_cargos = libro["Cargos"]
+            centros_costo[codigo] = {
+                "nombre": nombre,
+                "area": area
+            }
 
-         cargos = {}
+        # Cargos
+        hoja_cargos = libro[
+            "Cargos"
+        ]
 
-        for codigo_cargo, nombre_cargo, nivel, area in hoja_cargos.iter_rows(min_row=2, values_only=True):
-         cargos[codigo_cargo] = {
-        "nombre": nombre_cargo,
-        "nivel": nivel,
-        "area": area}
+        cargos = {}
 
-         hoja_roles = libro["Matriz_Roles"]
+        for (
+            codigo_cargo,
+            nombre_cargo,
+            nivel,
+            area
+        ) in hoja_cargos.iter_rows(
+            min_row=2,
+            values_only=True
+        ):
 
-         matriz_roles = {}
+            cargos[codigo_cargo] = {
+                "nombre": nombre_cargo,
+                "nivel": nivel,
+                "area": area
+            }
 
-        for codigo_cargo, area, perfil, aprobacion in hoja_roles.iter_rows(min_row=2, values_only=True):
+        # Matriz de roles
+        hoja_roles = libro[
+            "Matriz_Roles"
+        ]
 
-         clave = f"{codigo_cargo}|{area}"
+        matriz_roles = {}
 
-         matriz_roles[clave] = {"perfil": perfil, "requiere_aprobacion": aprobacion}
+        for (
+            codigo_cargo,
+            area,
+            perfil,
+            aprobacion
+        ) in hoja_roles.iter_rows(
+            min_row=2,
+            values_only=True
+        ):
 
-        return (parametros, campos_obligatorios, centros_costo, cargos, matriz_roles)
-    
+            clave = (
+                f"{codigo_cargo}|{area}"
+            )
+
+            matriz_roles[clave] = {
+                "perfil": perfil,
+                "requiere_aprobacion": aprobacion
+            }
+
+        return (
+            parametros,
+            campos_obligatorios,
+            centros_costo,
+            cargos,
+            matriz_roles
+        )
+
     except FileNotFoundError:
-     raise ErrorConfiguracion("No se encontró el archivo parametros.xlsx")
+
+        raise ErrorConfiguracion(
+            "No se encontró el archivo parametros.xlsx"
+        )
