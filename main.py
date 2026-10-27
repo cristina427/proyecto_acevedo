@@ -1,22 +1,57 @@
 from modulos.configuracion import cargar_configuracion
 from modulos.lectura import obtener_json_reciente
 from modulos.validacion import validar_modulo
-from modulos.validacion import validar_tipo_novedad
+from modulos.procesamiento import procesar_novedades
+from modulos.reporte import generar_reporte
+from modulos.registro import registrar_evento
+from modulos.registro import guardar_log
 
-parametros, campos_obligatorios = cargar_configuracion()
+
+registrar_evento(
+    "INFO",
+    "main",
+    "inicio",
+    "Inicio de ejecucion"
+)
+
+(parametros,
+ campos_obligatorios,
+ centros_costo,
+ cargos,
+ matriz_roles) = cargar_configuracion()
 
 novedades = obtener_json_reciente()
 
-print(f"Total novedades: {len(novedades)}")
+registrar_evento(
+    "INFO",
+    "lectura",
+    "leer_json",
+    f"Novedades encontradas: {len(novedades)}"
+)
 
 validar_modulo()
 
-for novedad in novedades:
+validos, rechazados = procesar_novedades(
+    novedades,
+    campos_obligatorios,
+    centros_costo,
+    cargos,
+    matriz_roles,
+    parametros
+)
 
-    tipo = novedad["tipo"].strip().upper()
+registrar_evento(
+    "INFO",
+    "procesamiento",
+    "procesar_novedades",
+    f"Validos: {len(validos)} - Rechazados: {len(rechazados)}"
+)
 
-    requeridos = campos_obligatorios[tipo]
+print(f"Validos: {len(validos)}")
+print(f"Rechazados: {len(rechazados)}")
 
-    print(requeridos)
-for campo in requeridos:
-    print(campo) 
+generar_reporte(validos, rechazados)
+
+print("Reporte generado correctamente")
+
+guardar_log()
